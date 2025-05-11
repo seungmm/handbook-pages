@@ -121,16 +121,17 @@ def colorize_command(command):
         parts = command.split("#", 1)
         return f"{parts[0]}#<span style='color:#1E90FF'>{parts[1]}</span>"
     return command
+
 def generate_table_html_home(data, table_id):
     html = f"""
     <style>
         .table-wrapper {{
-            width: 55%;
+            width: 100%;
             overflow-x: auto;
             margin-bottom: 10px;
         }}
         .table-container {{
-            width: 55%;
+            width: 100%;
         }}
         table#{table_id} {{
             width: 100%;
@@ -156,7 +157,7 @@ def generate_table_html_home(data, table_id):
     <div class="table-container">
         <div class="table-wrapper">
             <table id="{table_id}">
-                <tr><th>보드명</th><th>설명</th></tr>
+                <tr><th>명령어</th><th>설명</th></tr>
     """
 
     for row in data:
@@ -176,9 +177,10 @@ def generate_table_html_home(data, table_id):
             </tr>
             """
         else:
+            # 빈 행 등 예외 처리
             html += "<tr><td colspan='2'></td></tr>"
 
-    html += """
+    html += f"""
             </table>
         </div>
     </div>
