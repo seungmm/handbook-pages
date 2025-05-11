@@ -1,0 +1,147 @@
+def generate_table_html(data, table_id):
+    html = f"""
+    <style>
+        .table-wrapper {{
+            width: 100%;
+            overflow-x: auto; /* 테이블이 너무 넓어질 경우 가로 스크롤 */
+            margin-bottom: 10px; /* 버튼과의 간격 조절 */
+        }}
+        .table-container {{
+            width: 100%;
+        }}
+        table#{table_id} {{
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse; /* 테두리 중복 제거 */
+        }}
+        table#{table_id} th, table#{table_id} td {{
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }}
+        table#{table_id} th {{
+            background-color: white;
+            color: black;
+        }}
+        table#{table_id} td:first-child {{
+            width: auto;
+        }}
+        .copy-alert {{
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            font-size: 14px;
+            animation: fadeOut 2s ease-in-out forwards;
+        }}
+        @keyframes fadeOut {{
+            0% {{ opacity: 1; }}
+            100% {{ opacity: 0; display: none; }}
+        }}
+        .copy-text {{
+            color: black;
+            text-decoration: underline;
+            cursor: pointer;
+        }}
+        .copy-all-button-wrapper {{
+            text-align: right; /* 버튼을 오른쪽으로 정렬 */
+            margin-top: 10px; /* 테이블과의 간격 조절 */
+        }}
+        .copy-all-button {{
+            background-color: #5cb85c;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-block; /* 버튼을 내용에 맞게 표시 */
+        }}
+    </style>
+    <script>
+    function copyToClipboard_{table_id}(element) {{
+        var text = element.getAttribute("data-command");
+        var parts = text.split("#", 2);
+        if (parts.length > 1) {{
+            navigator.clipboard.writeText(parts[1]).then(function() {{
+                showCopyAlert_{table_id}();
+            }}).catch(function(err) {{
+                console.error("복사 실패: ", err);
+            }});
+        }}
+    }}
+
+    function showCopyAlert_{table_id}() {{
+        var alertBox = document.getElementById("copy-alert");
+        alertBox.style.display = "block";
+        setTimeout(function() {{
+            alertBox.style.display = "none";
+        }}, 2000);
+    }}
+
+    function copyAll_{table_id}() {{
+        var commands = [];
+        var table = document.getElementById("{table_id}");
+        var rows = table.getElementsByTagName("tr");
+        for (var i = 1; i < rows.length; i++) {{ // Skip header row
+            var cell = rows[i].getElementsByTagName("td")[0];
+            if (cell) {{
+                var copyTextSpan = cell.querySelector(".copy-text");
+                if (copyTextSpan) {{
+                    var command = copyTextSpan.getAttribute("data-command");
+                    var parts = command.split("#", 2);
+                    if (parts.length > 1) {{
+                        commands.push(parts[1]);
+                    }}
+                }} else {{
+                    commands.push(cell.textContent);
+                }}
+            }}
+        }}
+        navigator.clipboard.writeText(commands.join("\\n")).then(function() {{
+            showCopyAlert_{table_id}();
+        }}).catch(function(err) {{
+            console.error("전체 복사 실패: ", err);
+        }});
+    }}
+    </script>
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table id="{table_id}">
+                <tr><th>명령어</th><th>설명</th></tr>
+    """
+    for cmd, desc in data:
+        # 명령어에 '#'이 포함되어 있으면, 복사 가능하게 스타일 적용
+        if "#" in cmd:
+            html += f"""
+            <tr>
+                <td>
+                    <span class='copy-text' data-command="{cmd}" onclick="copyToClipboard_{table_id}(this)">{colorize_command(cmd)}</span>
+                </td>
+                <td>{desc}</td>
+            </tr>
+            """
+        else:
+            # '#'이 없으면 일반 텍스트로 표시 (스타일 없이)
+            html += f"""
+            <tr>
+                <td>{cmd}</td>
+                <td>{desc}</td>
+            </tr>
+            """
+    html += f"""
+            </table>
+        </div>
+        <div class="copy-all-button-wrapper">
+            <button class="copy-all-button" onclick="copyAll_{table_id}()">전체 명령어 복사</button>
+        </div>
+    </div>
+    <div id="copy-alert" class="copy-alert">📋 복사되었습니다!</div>
+    """
+    return html
+
